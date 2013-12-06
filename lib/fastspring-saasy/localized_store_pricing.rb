@@ -54,8 +54,7 @@ module FastSpring
       parsed_response[product_path]["unit_html"]
     end
 
-
-    protected
+  protected
     
     def parsed_response
       @parsed_response ||= parse_response
@@ -70,7 +69,7 @@ module FastSpring
         product_path = @response.parsed_response["product_#{index}_path"]
         if product_path
           @response.parsed_response.each do |key, value| 
-            if key.match("product_#{index}") && key != "product_#{index}_path" then
+            if key.match("product_#{index}_") && key != "product_#{index}_path" then
               response[product_path] ||= Hash.new
               response[product_path][key.match(/\d+_(.*)/)[1]] = value
             end

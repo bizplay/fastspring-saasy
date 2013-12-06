@@ -31,7 +31,7 @@ describe FastSpring::LocalizedStorePricing do
   context 'url for localized store pricing' do
     context "with valid http request" do
       subject { FastSpring::LocalizedStorePricing.find(['/standard'], valid_http_request) }
-      before do
+      before(:each) do
         stub_request(:get, "http://sites.fastspring.com/acme/api/price?product_1_path=/standard&user_accept_language=nl&user_remote_addr=192.168.1.1&user_x_forwarded_for=192.168.1.2").
           to_return(:status => 200, :body => "", :headers => {})
       end
@@ -43,7 +43,7 @@ describe FastSpring::LocalizedStorePricing do
     
     context "with invalid http request" do
       subject { FastSpring::LocalizedStorePricing.find(['/standard'], invalid_http_request) }
-      before do
+      before(:each) do
         stub_request(:get, "http://sites.fastspring.com/acme/api/price?product_1_path=/standard&user_accept_language=en&user_remote_addr=127.0.0.1&user_x_forwarded_for=").
           to_return(:status => 200, :body => "", :headers => {})
       end
@@ -55,7 +55,7 @@ describe FastSpring::LocalizedStorePricing do
     
     context "with partial http request" do
       subject { FastSpring::LocalizedStorePricing.find(['/standard'], partial_http_request) }
-      before do
+      before(:each) do
         stub_request(:get, "http://sites.fastspring.com/acme/api/price?product_1_path=/standard&user_accept_language=nl&user_remote_addr=192.168.1.1&user_x_forwarded_for=").
           to_return(:status => 200, :body => "", :headers => {})
       end
@@ -68,8 +68,8 @@ describe FastSpring::LocalizedStorePricing do
   
   context "parsed response for 1 product" do
     subject { FastSpring::LocalizedStorePricing.find(['/standard'], valid_http_request) }
-    before do
-      stub_request(:get, "https://api.fastspring.com/bizplay/api/price?product_1_path=/standard&user_accept_language=nl&user_remote_addr=192.168.1.1&user_x_forwarded_for=192.168.1.2").
+    before(:each) do
+      stub_request(:get, "http://sites.fastspring.com/acme/api/price?product_1_path=/standard&user_accept_language=nl&user_remote_addr=192.168.1.1&user_x_forwarded_for=192.168.1.2").
         to_return(stub_http_response_with('basic_localized_store_pricing.txt'))
     end
   
@@ -108,7 +108,7 @@ describe FastSpring::LocalizedStorePricing do
   
   context "localized pricing details specifically for 3 product" do
     subject { FastSpring::LocalizedStorePricing.find(['/basic','/standard','/plus'], valid_http_request) }
-    before do
+    before(:each) do
       stub_request(:get, "http://sites.fastspring.com/acme/api/price?product_1_path=/basic&product_2_path=/standard&product_3_path=/plus&user_accept_language=nl&user_remote_addr=192.168.1.1&user_x_forwarded_for=192.168.1.2").
         to_return(stub_http_response_with('basic_localized_store_pricing_with_3_products.txt'))
     end
@@ -149,4 +149,155 @@ describe FastSpring::LocalizedStorePricing do
       subject.product_unit_display("/plus").should == "$59.00"
     end
   end
+
+  # describe "#parse_response" do
+  #   before(:each) do
+  #     @response = double("Stubbed response")
+  #     @response.stub(:parsed_response).and_return(
+  #       {"user_country"=>"NL",
+  #        "user_language"=>"nl",
+  #        "user_currency"=>"EUR",
+  #        "product_1_name"=>"Basic Regular | Annually",
+  #        "product_1_path"=>"/basic_a",
+  #        "product_1_quantity"=>"1",
+  #        "product_1_first_currency"=>"EUR",
+  #        "product_1_first_display"=>"€ 0,00",
+  #        "product_1_first_html"=>"&euro; 0,00",
+  #        "product_1_first_value"=>"0.0",
+  #        "product_1_unit_currency"=>"EUR",
+  #        "product_1_unit_display"=>"€ 150,00",
+  #        "product_1_unit_html"=>"&euro; 150,00",
+  #        "product_1_unit_value"=>"150.0",
+  #        "product_2_name"=>"Standard Regular | Annually",
+  #        "product_2_path"=>"/standard_a",
+  #        "product_2_quantity"=>"1",
+  #        "product_2_first_currency"=>"EUR",
+  #        "product_2_first_display"=>"€ 0,00",
+  #        "product_2_first_html"=>"&euro; 0,00",
+  #        "product_2_first_value"=>"0.0",
+  #        "product_2_unit_currency"=>"EUR",
+  #        "product_2_unit_display"=>"€ 228,00",
+  #        "product_2_unit_html"=>"&euro; 228,00",
+  #        "product_2_unit_value"=>"228.0",
+  #        "product_3_name"=>"Max Regular | Annually",
+  #        "product_3_path"=>"/max_a",
+  #        "product_3_quantity"=>"1",
+  #        "product_3_first_currency"=>"EUR",
+  #        "product_3_first_display"=>"€ 0,00",
+  #        "product_3_first_html"=>"&euro; 0,00",
+  #        "product_3_first_value"=>"0.0",
+  #        "product_3_unit_currency"=>"EUR",
+  #        "product_3_unit_display"=>"€ 708,00",
+  #        "product_3_unit_html"=>"&euro; 708,00",
+  #        "product_3_unit_value"=>"708.0",
+  #        "product_4_name"=>"Basic Enterprise | Annually",
+  #        "product_4_path"=>"/basic_ent_a",
+  #        "product_4_quantity"=>"1",
+  #        "product_4_first_currency"=>"EUR",
+  #        "product_4_first_display"=>"€ 0,00",
+  #        "product_4_first_html"=>"&euro; 0,00",
+  #        "product_4_first_value"=>"0.0",
+  #        "product_4_unit_currency"=>"EUR",
+  #        "product_4_unit_display"=>"€ 150,00",
+  #        "product_4_unit_html"=>"&euro; 150,00",
+  #        "product_4_unit_value"=>"150.0",
+  #        "product_5_name"=>"Standard Enterprise | Annually",
+  #        "product_5_path"=>"/standard_ent_a",
+  #        "product_5_quantity"=>"1",
+  #        "product_5_first_currency"=>"EUR",
+  #        "product_5_first_display"=>"€ 0,00",
+  #        "product_5_first_html"=>"&euro; 0,00",
+  #        "product_5_first_value"=>"0.0",
+  #        "product_5_unit_currency"=>"EUR",
+  #        "product_5_unit_display"=>"€ 228,00",
+  #        "product_5_unit_html"=>"&euro; 228,00",
+  #        "product_5_unit_value"=>"228.0",
+  #        "product_6_name"=>"Max Enterprise | Annually",
+  #        "product_6_path"=>"/max_ent_a",
+  #        "product_6_quantity"=>"1",
+  #        "product_6_first_currency"=>"EUR",
+  #        "product_6_first_display"=>"€ 0,00",
+  #        "product_6_first_html"=>"&euro; 0,00",
+  #        "product_6_first_value"=>"0.0",
+  #        "product_6_unit_currency"=>"EUR",
+  #        "product_6_unit_display"=>"€ 708,00",
+  #        "product_6_unit_html"=>"&euro; 708,00",
+  #        "product_6_unit_value"=>"708.0",
+  #        "product_7_name"=>"Basic Regular | Monthly",
+  #        "product_7_path"=>"/basic_m",
+  #        "product_7_quantity"=>"1",
+  #        "product_7_first_currency"=>"EUR",
+  #        "product_7_first_display"=>"€ 0,00",
+  #        "product_7_first_html"=>"&euro; 0,00",
+  #        "product_7_first_value"=>"0.0",
+  #        "product_7_unit_currency"=>"EUR",
+  #        "product_7_unit_display"=>"€ 15,00",
+  #        "product_7_unit_html"=>"&euro; 15,00",
+  #        "product_7_unit_value"=>"15.0",
+  #        "product_8_name"=>"Standard Regular | Monthly",
+  #        "product_8_path"=>"/standard_m",
+  #        "product_8_quantity"=>"1",
+  #        "product_8_first_currency"=>"EUR",
+  #        "product_8_first_display"=>"€ 0,00",
+  #        "product_8_first_html"=>"&euro; 0,00",
+  #        "product_8_first_value"=>"0.0",
+  #        "product_8_unit_currency"=>"EUR",
+  #        "product_8_unit_display"=>"€ 22,50",
+  #        "product_8_unit_html"=>"&euro; 22,50",
+  #        "product_8_unit_value"=>"22.5",
+  #        "product_9_name"=>"Max Regular | Monthly",
+  #        "product_9_path"=>"/max_m",
+  #        "product_9_quantity"=>"1",
+  #        "product_9_first_currency"=>"EUR",
+  #        "product_9_first_display"=>"€ 0,00",
+  #        "product_9_first_html"=>"&euro; 0,00",
+  #        "product_9_first_value"=>"0.0",
+  #        "product_9_unit_currency"=>"EUR",
+  #        "product_9_unit_display"=>"€ 69,00",
+  #        "product_9_unit_html"=>"&euro; 69,00",
+  #        "product_9_unit_value"=>"69.0",
+  #        "product_10_name"=>"Basic Enterprise | Monthly",
+  #        "product_10_path"=>"/basic_ent_m",
+  #        "product_10_quantity"=>"1",
+  #        "product_10_first_currency"=>"EUR",
+  #        "product_10_first_display"=>"€ 0,00",
+  #        "product_10_first_html"=>"&euro; 0,00",
+  #        "product_10_first_value"=>"0.0",
+  #        "product_10_unit_currency"=>"EUR",
+  #        "product_10_unit_display"=>"€ 15,00",
+  #        "product_10_unit_html"=>"&euro; 15,00",
+  #        "product_10_unit_value"=>"15.0",
+  #        "product_11_name"=>"Standard Enterprise | Monthly",
+  #        "product_11_path"=>"/standard_ent_m",
+  #        "product_11_quantity"=>"1",
+  #        "product_11_first_currency"=>"EUR",
+  #        "product_11_first_display"=>"€ 0,00",
+  #        "product_11_first_html"=>"&euro; 0,00",
+  #        "product_11_first_value"=>"0.0",
+  #        "product_11_unit_currency"=>"EUR",
+  #        "product_11_unit_display"=>"€ 22,50",
+  #        "product_11_unit_html"=>"&euro; 22,50",
+  #        "product_11_unit_value"=>"22.5",
+  #        "product_12_name"=>"Max Enterprise | Monthly",
+  #        "product_12_path"=>"/max_ent_m",
+  #        "product_12_quantity"=>"1",
+  #        "product_12_first_currency"=>"EUR",
+  #        "product_12_first_display"=>"€ 69,00",
+  #        "product_12_first_html"=>"&euro; 69,00",
+  #        "product_12_first_value"=>"69.0",
+  #        "product_12_unit_currency"=>"EUR",
+  #        "product_12_unit_display"=>"€ 69,00",
+  #        "product_12_unit_html"=>"&euro; 69,00",
+  #        "product_12_unit_value"=>"69.0"}      
+  #     )
+  #     localized_store_pricing = FastSpring::LocalizedStorePricing.new
+  #     localized_store_pricing.instance_variable_set(:@response, @response)
+  #   end
+  #   
+  #   it "returns a hash containing key '/basic_a'" do
+  #     parsed_response = localized_store_pricing.send(:parse_response)
+  #     byebug
+  #     parsed_response.should_not be_nil
+  #   end
+  # end
 end
