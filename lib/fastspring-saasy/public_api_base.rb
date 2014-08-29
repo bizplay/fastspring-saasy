@@ -2,7 +2,7 @@ module FastSpring
   class PublicApiBase
     include HTTParty
     base_uri 'http://sites.fastspring.com'
-    debug_output $stdout
+    # debug_output $stdout
 
     def initialize(product_paths, http_request, options={})
       @company = FastSpring::Account.fetch(:company)

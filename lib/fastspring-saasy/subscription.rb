@@ -1,13 +1,21 @@
 require 'date'
+require 'gyoku'
 
 module FastSpring
   class Subscription < PrivateApiBase
     def self.create_subscription_url(reference, referrer)
       "#{SITE_URL}/#{FastSpring::Account.fetch(:company)}/product/#{reference}?referrer=#{referrer}"
     end
+
     # Get the subscription from Saasy
     def find
       @response = self.class.get(base_subscription_path, :basic_auth => @auth, :ssl_ca_file => @ssl_ca_file)
+      self
+    end
+
+    # Update the subscription from Saasy
+    def update!(options={})
+      @response = self.class.put(base_subscription_path, :body => Gyoku.xml(subscription: options), :headers => {'Content-Type' => 'application/xml'},:basic_auth => @auth)
       self
     end
 
@@ -53,12 +61,12 @@ module FastSpring
       begin
         fs_tags = value_for('tags')
         result = {}
-        fs_tags.split(",").each do |t| 
+        fs_tags.split(",").each do |t|
            k,v = t.strip.split('=')
            result[k.to_sym] = v
         end
         result
-      rescue 
+      rescue
         nil
       end
     end
@@ -87,7 +95,6 @@ module FastSpring
     def parsed_response
       @response.parsed_response['subscription']
     end
-
   end
 end
 

@@ -15,12 +15,12 @@ module FastSpring
     def query
       query_hash = Hash.new
       @product_paths.each_index{ |index| query_hash["product_#{(index + 1)}_path".to_sym] = @product_paths[index] }
-      query_hash.merge({ 
+      query_hash.merge!({ 
         :user_remote_addr => @remote_ip,
         :user_accept_language => @http_accept_language,
         :user_x_forwarded_for => @http_x_forwarded_for
       })
-      query_hash.merge(@options || {})
+      query_hash.merge!(@options || {})
     end
     
     def user_country
