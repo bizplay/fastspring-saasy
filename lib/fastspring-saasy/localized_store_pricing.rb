@@ -20,6 +20,7 @@ module FastSpring
         :user_accept_language => @http_accept_language,
         :user_x_forwarded_for => @http_x_forwarded_for
       })
+      query_hash.merge(@options || {})
     end
     
     def user_country
